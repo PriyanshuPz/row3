@@ -28,6 +28,26 @@ export default function GameModeSelector() {
           Play Online
         </button>
       </div>
+
+      <a
+        href="https://handwar.p8labs.tech"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-8 w-full max-w-md rounded-xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 border-2 border-border hover:border-secondary transition-all duration-300 hover:shadow-lg"
+      >
+        <div className="flex flex-col items-center">
+          <div className="p-4 text-center">
+            <h3 className="text-xl font-bold text-text game-font">
+              Also, Try{" "}
+              <span className="text-secondary font-outline-2">Hand</span>
+              <span className="text-primary font-outline-2">War</span>!
+            </h3>
+            <p className="text-text/80 mt-1">
+              Challenge friends in this exciting new game!
+            </p>
+          </div>
+        </div>
+      </a>
     </div>
   );
 }

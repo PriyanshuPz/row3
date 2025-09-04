@@ -45,7 +45,7 @@ function GameContent() {
 export default function App() {
   return (
     <GameProvider>
-      <div className="h-screen w-screen flex items-center justify-center">
+      <div className="h-screen w-screen flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
         <Toaster
           expand={false}
           visibleToasts={1}

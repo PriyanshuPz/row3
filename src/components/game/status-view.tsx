@@ -24,7 +24,7 @@ export default function StatusView() {
         >
           <span
             className={cn(
-              "p-4 px-6 rounded-r-sm text-4xl text-white w-20 text-center game-font",
+              "p-4 px-6 rounded-l-sm text-4xl text-white w-20 text-center game-font",
               winner === "O" ? "bg-primary" : "bg-secondary"
             )}
           >
@@ -42,19 +42,19 @@ export default function StatusView() {
         <div
           className={cn(
             "rounded-sm w-full bg-border font-bold",
-            "flex items-center justify-between"
+            "flex items-center"
           )}
         >
-          <span className="px-4 text-4xl font-bold text-text/90 nmal-font tracking-wide">
-            Your Turn
-          </span>
           <span
             className={cn(
-              "p-4 px-6 rounded-r-sm text-4xl text-white w-20 text-center game-font",
+              "p-4 px-6 rounded-l-sm text-4xl text-white w-20 text-center game-font",
               currentPlayer === "X" ? "bg-primary" : "bg-secondary"
             )}
           >
             {currentPlayer}
+          </span>
+          <span className="ml-4 px-4 text-4xl font-bold text-text/90 nmal-font tracking-wide">
+            Your Turn
           </span>
         </div>
       </div>
