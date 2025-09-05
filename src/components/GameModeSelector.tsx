@@ -1,4 +1,3 @@
-import { toast } from "sonner";
 import { useGame } from "../context/GameContext";
 
 export default function GameModeSelector() {
@@ -20,8 +19,7 @@ export default function GameModeSelector() {
         </button>
         <button
           onClick={() => {
-            toast.info("Comming Soon!");
-            // setGameMode("multiplayer");
+            setGameMode("multiplayer");
           }}
           className="border-2 p-3 px-6 font-semibold rounded-4xl border-secondary text-secondary hover:bg-secondary hover:text-white transition-all"
         >

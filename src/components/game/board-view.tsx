@@ -5,7 +5,7 @@ import XO from "./x-o";
 
 export default function BoardView() {
   const { gameState, makeMove, resetGame } = useGame();
-  const { board, status } = gameState;
+  const { board, status, connectionStatus } = gameState;
 
   const renderCell = (index: number) => {
     const cell = board[index];
@@ -16,7 +16,11 @@ export default function BoardView() {
           playSound("click");
           makeMove(index);
         }}
-        disabled={cell !== null || status === "finished"}
+        disabled={
+          cell !== null ||
+          status === "finished" ||
+          connectionStatus !== "connected"
+        }
         className={cn(
           "w-24 h-24 bg-border rounded-lg flex items-center justify-center",
           "transition-all duration-300 hover:bg-border/80",
