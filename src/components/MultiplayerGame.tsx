@@ -38,7 +38,7 @@ export default function MultiplayerGame() {
   };
 
   return (
-    <div className="flex items-start justify-center gap-8 flex-col">
+    <div className="flex items-start justify-center gap-8 flex-col h-full max-sm:py-6">
       <div className="flex justify-between w-full">
         <SoundControl />
         <button
@@ -52,7 +52,7 @@ export default function MultiplayerGame() {
         </button>
       </div>
 
-      <div className="flex items-start justify-center gap-8">
+      <div className="flex items-start justify-center gap-8 sm:flex-row flex-col sm:items-center w-full max-w-4xl">
         <div className="flex flex-col items-center">
           <BoardView />
           <div className="mt-2" />

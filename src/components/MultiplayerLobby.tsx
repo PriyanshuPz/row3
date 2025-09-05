@@ -40,7 +40,7 @@ export default function MultiplayerLobby() {
             </div>
 
             <h2 className="text-2xl font-medium text-text">
-              {isConnected ? "Connected!" : "Waiting for opponent..."}
+              {connectionStatus.toLocaleUpperCase()}
             </h2>
 
             <div className="w-full p-4 bg-border/20 rounded-lg flex items-center justify-between">
@@ -58,17 +58,6 @@ export default function MultiplayerLobby() {
               >
                 <Share2Icon size={18} className="text-primary" />
               </button>
-            </div>
-
-            <div className="text-sm text-text/60">
-              Status:{" "}
-              <span
-                className={`font-medium ${
-                  isConnected ? "text-secondary" : "text-primary"
-                }`}
-              >
-                {connectionStatus}
-              </span>
             </div>
 
             <button
