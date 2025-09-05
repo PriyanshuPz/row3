@@ -19,7 +19,7 @@ export default function BoardView() {
         disabled={
           cell !== null ||
           status === "finished" ||
-          connectionStatus !== "connected"
+          (gameState.mode == "multiplayer" && connectionStatus !== "connected")
         }
         className={cn(
           "w-24 h-24 bg-border rounded-lg flex items-center justify-center",
