@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils";
 
 export default function StatusView() {
   const { gameState } = useGame();
-  const { currentPlayer, winner, isHost } = gameState;
+  const { winner, playerType } = gameState;
 
   if (winner === "draw") {
     return (
@@ -48,13 +48,13 @@ export default function StatusView() {
           <span
             className={cn(
               "p-4 px-6 rounded-l-sm text-4xl text-white w-20 text-center game-font",
-              currentPlayer === "X" ? "bg-primary" : "bg-secondary"
+              playerType === "O" ? "bg-primary" : "bg-secondary"
             )}
           >
-            {currentPlayer}
+            {playerType}
           </span>
           <span className="ml-4 px-4 text-4xl font-bold text-text/90 nmal-font tracking-wide">
-            {isHost && currentPlayer === "X" ? "Now You" : "Not You"}
+            {playerType === "O" ? "Now You" : "Not You"}
           </span>
         </div>
       </div>

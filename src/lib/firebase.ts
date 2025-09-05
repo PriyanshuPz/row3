@@ -1,5 +1,10 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  signInAnonymously,
+  onAuthStateChanged,
+  type User,
+} from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -28,15 +33,49 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
 export interface Room {
   id?: string;
+  creatorId?: string;
   name: string;
   code: string;
   answer: RTCSessionDescriptionInit | null;
   offer: RTCSessionDescriptionInit | null;
   createdAt: any;
   expiresAt: any;
+}
+
+/**
+ * Signs in the user anonymously to Firebase
+ * @returns Promise that resolves with the user object
+ */
+export async function signInAnonymouslyToFirebase(): Promise<User> {
+  try {
+    const { user } = await signInAnonymously(auth);
+    console.log("Anonymous user signed in:", user.uid);
+    return user;
+  } catch (error) {
+    console.error("Error signing in anonymously:", error);
+    throw error;
+  }
+}
+
+/**
+ * Gets the current authenticated user or null if not signed in
+ * @returns The current Firebase user
+ */
+export function getCurrentUser(): User | null {
+  return auth.currentUser;
+}
+
+/**
+ * Sets up an auth state change listener
+ * @param callback Function to call when auth state changes
+ * @returns Unsubscribe function
+ */
+export function onAuthStateChange(callback: (user: User | null) => void) {
+  return onAuthStateChanged(auth, callback);
 }
 
 /**
@@ -50,6 +89,11 @@ export async function createFirebaseRoom(
   offer: RTCSessionDescriptionInit
 ): Promise<string | null> {
   try {
+    // Ensure user is authenticated
+    if (!auth.currentUser) {
+      await signInAnonymouslyToFirebase();
+    }
+
     const joinCode =
       "R3" + Math.random().toString(36).substring(2, 6).toUpperCase();
 
@@ -59,6 +103,7 @@ export async function createFirebaseRoom(
 
     const roomData: Room = {
       name,
+      creatorId: auth.currentUser ? auth.currentUser.uid : "unknown",
       code: joinCode,
       offer: {
         type: offer.type,
@@ -72,11 +117,16 @@ export async function createFirebaseRoom(
     // Add room to Firestore collection
     const roomRef = await addDoc(collection(db, "rooms"), roomData);
 
+    console.log("Room created with ID:", roomData.creatorId);
     // Create a reference with the join code for easy lookup
     await setDoc(doc(db, "roomCodes", joinCode), {
+      creatorId: roomData.creatorId,
       roomId: roomRef.id,
       expiresAt: expiresAt,
     });
+
+    // No need to await this, run in background to keep things fast and this is not critical
+    cleanupExpiredRooms();
 
     return joinCode;
   } catch (error) {
@@ -139,6 +189,11 @@ export async function updateRoomWithAnswer(
   answer: RTCSessionDescriptionInit
 ): Promise<boolean> {
   try {
+    // Ensure user is authenticated
+    if (!auth.currentUser) {
+      await signInAnonymouslyToFirebase();
+    }
+
     // Find room ID from join code
     const codeRef = doc(db, "roomCodes", joinCode);
     const codeDoc = await getDoc(codeRef);
@@ -216,8 +271,19 @@ export async function cleanupExpiredRooms(): Promise<void> {
 
     // Delete each expired room
     querySnapshot.forEach(async (doc) => {
-      const { roomId } = doc.data();
-      await deleteRoom(doc.id, roomId);
+      await deleteDoc(doc.ref);
+    });
+
+    // Delete Rooms also expired but not referenced in roomCodes
+    const roomQuery = query(
+      collection(db, "rooms"),
+      where("expiresAt", "<=", now)
+    );
+    const roomSnapshot = await getDocs(roomQuery);
+
+    roomSnapshot.forEach(async (roomDoc) => {
+      await deleteDoc(roomDoc.ref);
+      console.log(`Deleted expired room: ${roomDoc.id}`);
     });
   } catch (error) {
     console.error("Error cleaning up expired rooms:", error);

@@ -33,6 +33,49 @@ export async function createPeerConnection(): Promise<PeerConnection> {
     // Update connection state when it changes
     connection.onconnectionstatechange = () => {
       peerConnection.connectionState = connection.connectionState;
+
+      if (connectionStatusCallback) {
+        connectionStatusCallback(
+          "connection_state_change",
+          connection.connectionState
+        );
+      }
+
+      // Handle specific states
+      if (
+        connection.connectionState === "disconnected" ||
+        connection.connectionState === "failed" ||
+        connection.connectionState === "closed"
+      ) {
+        if (connectionStatusCallback) {
+          connectionStatusCallback(
+            "connection_lost",
+            connection.connectionState
+          );
+        }
+      }
+    };
+
+    // Handle ICE connection state changes
+    connection.oniceconnectionstatechange = () => {
+      if (connectionStatusCallback) {
+        connectionStatusCallback(
+          "ice_state_change",
+          connection.iceConnectionState
+        );
+      }
+
+      if (
+        connection.iceConnectionState === "failed" ||
+        connection.iceConnectionState === "disconnected"
+      ) {
+        if (connectionStatusCallback) {
+          connectionStatusCallback(
+            "ice_connection_failed",
+            connection.iceConnectionState
+          );
+        }
+      }
     };
 
     // Create an offer to send to the other peer
@@ -67,6 +110,49 @@ export async function joinPeerConnection(
     // Update connection state when it changes
     connection.onconnectionstatechange = () => {
       peerConnection.connectionState = connection.connectionState;
+
+      if (connectionStatusCallback) {
+        connectionStatusCallback(
+          "connection_state_change",
+          connection.connectionState
+        );
+      }
+
+      // Handle specific states
+      if (
+        connection.connectionState === "disconnected" ||
+        connection.connectionState === "failed" ||
+        connection.connectionState === "closed"
+      ) {
+        if (connectionStatusCallback) {
+          connectionStatusCallback(
+            "connection_lost",
+            connection.connectionState
+          );
+        }
+      }
+    };
+
+    // Handle ICE connection state changes
+    connection.oniceconnectionstatechange = () => {
+      if (connectionStatusCallback) {
+        connectionStatusCallback(
+          "ice_state_change",
+          connection.iceConnectionState
+        );
+      }
+
+      if (
+        connection.iceConnectionState === "failed" ||
+        connection.iceConnectionState === "disconnected"
+      ) {
+        if (connectionStatusCallback) {
+          connectionStatusCallback(
+            "ice_connection_failed",
+            connection.iceConnectionState
+          );
+        }
+      }
     };
 
     // Set the remote description using the offer
@@ -96,18 +182,43 @@ export async function completeConnection(
   }
 }
 
+// Type for connection callback handlers
+type ConnectionCallback = (event: string, detail?: any) => void;
+
+// Global connection callback
+let connectionStatusCallback: ConnectionCallback | null = null;
+
+// Register a callback for connection status changes
+export function registerConnectionCallback(callback: ConnectionCallback): void {
+  connectionStatusCallback = callback;
+}
+
+// Unregister the connection callback
+export function unregisterConnectionCallback(): void {
+  connectionStatusCallback = null;
+}
+
 // Setup data channel event handlers
 function setupDataChannel(channel: RTCDataChannel): void {
   channel.onopen = () => {
     console.log("Data channel is open");
+    if (connectionStatusCallback) {
+      connectionStatusCallback("channel_open");
+    }
   };
 
   channel.onclose = () => {
     console.log("Data channel is closed");
+    if (connectionStatusCallback) {
+      connectionStatusCallback("channel_closed");
+    }
   };
 
   channel.onerror = (error) => {
     console.error("Data channel error:", error);
+    if (connectionStatusCallback) {
+      connectionStatusCallback("channel_error", error);
+    }
   };
 }
 

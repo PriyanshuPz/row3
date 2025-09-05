@@ -7,7 +7,9 @@ import {
   createPeerConnection,
   isPeerConnected,
   joinPeerConnection,
+  registerConnectionCallback,
   sendMessage as sendWebRTCMessage,
+  unregisterConnectionCallback,
   type PeerConnection,
 } from "./webrtc";
 import {
@@ -60,6 +62,7 @@ interface GameStore extends GameState {
   leaveRoom: () => Promise<void>;
   sendMessage: (message: string) => void;
   handlePeerMessage: (data: any) => void;
+  handleConnectionEvent: (event: string, detail?: any) => void;
 }
 
 // Initial state
@@ -111,27 +114,75 @@ const checkWinner = (
 // Create the store with persistence
 export const useGameStore = create<GameStore>()(
   persist(
-    (set) => {
+    (set, get) => {
       // Initialize sounds
       initSounds();
+
+      // Handle WebRTC connection events
+      const handleConnectionEvent = (event: string, detail?: any) => {
+        console.log(`WebRTC event: ${event}`, detail);
+
+        // Add system message to chat based on the event
+        let message = "";
+
+        switch (event) {
+          case "connection_lost":
+            message = `Connection lost (${detail}). Please try reconnecting.`;
+            break;
+          case "ice_connection_failed":
+            message = `Network connection issue (${detail}). Check your internet connection.`;
+            break;
+          case "channel_closed":
+            message =
+              "Communication channel closed. Opponent may have left the game.";
+            break;
+          case "channel_error":
+            message = "Communication error. Game may be unstable.";
+            break;
+          case "connection_state_change":
+            if (detail === "connected") {
+              message = "Connection established successfully!";
+              set((state) => ({
+                ...state,
+                connectionStatus: "connected",
+              }));
+            }
+            break;
+        }
+
+        // Only add message if we have something to say
+        if (message) {
+          set((state) => ({
+            ...state,
+            chatMessages: [
+              ...state.chatMessages,
+              { sender: "System", text: message },
+            ],
+            connectionStatus:
+              event === "connection_lost" ||
+              event === "ice_connection_failed" ||
+              event === "channel_closed"
+                ? "disconnected"
+                : state.connectionStatus,
+          }));
+        }
+      };
 
       return {
         // Initial state
         ...initialState,
+        handleConnectionEvent,
         quitGame: () => {
-          set(initialState);
+          // Unregister connection callback
+          unregisterConnectionCallback();
+
+          // Close connection if exists
           if (peerConnection) {
             closePeerConnection(peerConnection);
             peerConnection = null;
-            set((state) => ({
-              ...state,
-              connectionStatus: "disconnected",
-              roomId: null,
-              isHost: false,
-              playerType: null,
-              chatMessages: [],
-            }));
           }
+
+          set(initialState);
         },
         // Actions
         resetGame: () =>
@@ -238,6 +289,9 @@ export const useGameStore = create<GameStore>()(
               playerType: "X", // Host is always X
             }));
 
+            // Register connection event handler
+            registerConnectionCallback(get().handleConnectionEvent);
+
             // Create WebRTC peer connection
             peerConnection = await createPeerConnection();
 
@@ -316,6 +370,7 @@ export const useGameStore = create<GameStore>()(
                 // Failed to create room
                 closePeerConnection(peerConnection);
                 peerConnection = null;
+                unregisterConnectionCallback();
 
                 set((state) => ({
                   ...state,
@@ -336,6 +391,7 @@ export const useGameStore = create<GameStore>()(
               closePeerConnection(peerConnection);
               peerConnection = null;
             }
+            unregisterConnectionCallback();
 
             set((state) => ({
               ...state,
@@ -362,6 +418,9 @@ export const useGameStore = create<GameStore>()(
               isHost: false,
               playerType: "O", // Joiner is always O
             }));
+
+            // Register connection event handler
+            registerConnectionCallback(get().handleConnectionEvent);
 
             // Find the room in Firebase
             const room = await findRoomByCode(roomCode);
@@ -430,6 +489,7 @@ export const useGameStore = create<GameStore>()(
               closePeerConnection(peerConnection);
               peerConnection = null;
             }
+            unregisterConnectionCallback();
 
             set((state) => ({
               ...state,
@@ -447,14 +507,28 @@ export const useGameStore = create<GameStore>()(
         },
 
         leaveRoom: async () => {
+          // Send disconnect message if possible
+          if (peerConnection && isPeerConnected(peerConnection)) {
+            try {
+              const disconnectMessage: GameMessage = {
+                type: "disconnect",
+                data: { reason: "user_left" },
+              };
+              sendWebRTCMessage(peerConnection, disconnectMessage);
+            } catch (e) {
+              console.error("Error sending disconnect message:", e);
+            }
+          }
+
           // Clean up WebRTC connection
           if (peerConnection) {
             closePeerConnection(peerConnection);
             peerConnection = null;
           }
+          unregisterConnectionCallback();
 
           // If host, delete the room from Firebase
-          const state = useGameStore.getState();
+          const state = get();
           if (state.isHost && state.roomId) {
             try {
               await deleteRoom(state.roomId, state.roomId);
@@ -501,7 +575,7 @@ export const useGameStore = create<GameStore>()(
         },
 
         handlePeerMessage: (message: GameMessage) => {
-          const state = useGameStore.getState();
+          const state = get();
 
           switch (message.type) {
             case "move":
@@ -557,6 +631,13 @@ export const useGameStore = create<GameStore>()(
                 currentPlayer: "X",
                 status: "playing",
                 winner: null,
+                chatMessages: [
+                  ...state.chatMessages,
+                  {
+                    sender: "System",
+                    text: "Game has been reset by opponent.",
+                  },
+                ],
               }));
               break;
 
@@ -567,13 +648,9 @@ export const useGameStore = create<GameStore>()(
                 connectionStatus: "disconnected",
                 chatMessages: [
                   ...state.chatMessages,
-                  { sender: "System", text: "Peer has disconnected." },
+                  { sender: "System", text: "Opponent has left the game." },
                 ],
               }));
-              if (peerConnection) {
-                closePeerConnection(peerConnection);
-                peerConnection = null;
-              }
               break;
 
             default:
@@ -585,6 +662,12 @@ export const useGameStore = create<GameStore>()(
     {
       name: "row3-game-storage",
       version: 1,
+      partialize: (state) => ({
+        // Don't persist these WebRTC related states
+        ...state,
+        chatMessages: undefined,
+        connectionStatus: undefined,
+      }),
     }
   )
 );
