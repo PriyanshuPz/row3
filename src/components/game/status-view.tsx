@@ -3,7 +3,7 @@ import { cn } from "../../lib/utils";
 
 export default function StatusView() {
   const { gameState } = useGame();
-  const { currentPlayer, winner } = gameState;
+  const { currentPlayer, winner, isHost } = gameState;
 
   if (winner === "draw") {
     return (
@@ -54,7 +54,7 @@ export default function StatusView() {
             {currentPlayer}
           </span>
           <span className="ml-4 px-4 text-4xl font-bold text-text/90 nmal-font tracking-wide">
-            Your Turn
+            {isHost && currentPlayer === "X" ? "Now You" : "Not You"}
           </span>
         </div>
       </div>

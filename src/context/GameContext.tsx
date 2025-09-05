@@ -1,7 +1,7 @@
 import { createContext, useContext } from "react";
 import type { ReactNode } from "react";
 import { useGameStore } from "../lib/store";
-import type { GameMode, GameStatus, PlayerType, Room } from "../lib/store";
+import type { GameMode, GameStatus, PlayerType } from "../lib/store";
 
 // Define the game state interface
 interface GameState {
@@ -11,7 +11,10 @@ interface GameState {
   currentPlayer: PlayerType;
   winner: PlayerType | "draw" | null;
   roomId: string | null;
-  rooms: Room[];
+  isHost: boolean;
+  playerType: PlayerType | null;
+  chatMessages: Array<{ sender: string; text: string }>;
+  connectionStatus: string;
 }
 
 // Define the context interface
@@ -46,7 +49,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({
       currentPlayer: store.currentPlayer,
       winner: store.winner,
       roomId: store.roomId,
-      rooms: store.rooms,
+      isHost: store.isHost,
+      playerType: store.playerType,
+      chatMessages: store.chatMessages,
+      connectionStatus: store.connectionStatus,
     },
     resetGame: store.resetGame,
     makeMove: store.makeMove,
