@@ -179,6 +179,7 @@ export function closePeerConnection(
 ): void {
   if (peerConnection) {
     if (peerConnection.channel) {
+      sendMessage(peerConnection, { type: "disconnect", data: {} });
       peerConnection.channel.close();
     }
     peerConnection.connection.close();

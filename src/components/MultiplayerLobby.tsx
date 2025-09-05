@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useGame } from "../context/GameContext";
-import { Highlighter } from "./hightlighter";
 import { LogOutIcon } from "lucide-react";
 
 export default function MultiplayerLobby() {
@@ -16,11 +15,9 @@ export default function MultiplayerLobby() {
     return (
       <div className="flex flex-col items-center justify-center gap-6">
         <h2 className="text-3xl font-bold text-text">
-          <Highlighter action="highlight" color="#41bdd6">
-            {connectionStatus === "connected"
-              ? "Connected! Game starting..."
-              : "Waiting for opponent..."}
-          </Highlighter>
+          {connectionStatus === "connected"
+            ? "Connected! Game starting..."
+            : "Waiting for opponent..."}
         </h2>
         <p className="text-xl text-text">
           Share this code with a friend:{" "}
@@ -67,10 +64,10 @@ export default function MultiplayerLobby() {
         <div className="flex items-center gap-2 justify-center flex-row w-full">
           <button
             onClick={() => joinRoom(inputText)}
-            disabled={!inputText.trim()}
+            disabled={!inputText.trim() || gameState.status == "connecting"}
             className="p-2 rounded-full hover:bg-border transition-all text-text border-2 px-4 disabled:border-muted disabled:text-muted disabled:hover:bg-white"
           >
-            Join
+            {gameState.status == "connecting" ? "Joining..." : "Join"}
           </button>
         </div>
         <span className="font-bold text-text">OR</span>
@@ -79,10 +76,9 @@ export default function MultiplayerLobby() {
             onClick={() =>
               createRoom("Room " + Math.floor(Math.random() * 1000))
             }
-            disabled={!inputText.trim()}
             className="p-2 rounded-full hover:bg-border transition-all text-text border-2 px-4 disabled:border-muted disabled:text-muted disabled:hover:bg-white"
           >
-            Create
+            {gameState.status == "connecting" ? "Creating..." : "Create"}
           </button>
         </div>
       </div>

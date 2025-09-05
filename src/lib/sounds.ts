@@ -1,5 +1,5 @@
 // Sound effect types
-export type SoundEffect = "move" | "win" | "draw" | "click";
+export type SoundEffect = "move" | "win" | "draw" | "click" | "pop";
 
 // Sound URLs - replace these with actual sound file URLs once you have the audio files
 const soundUrls: Record<SoundEffect, string> = {
@@ -7,6 +7,7 @@ const soundUrls: Record<SoundEffect, string> = {
   win: "/sounds/win.mp3",
   draw: "/sounds/draw.mp3",
   click: "/sounds/click.mp3",
+  pop: "/sounds/pop.mp3",
 };
 
 // Number of sounds in each pool (for frequent clicking)
@@ -18,6 +19,7 @@ const audioPools: Record<SoundEffect, HTMLAudioElement[]> = {
   win: [],
   draw: [],
   click: [],
+  pop: [],
 };
 
 // Track the last used index for each sound type
@@ -26,6 +28,7 @@ const lastIndexUsed: Record<SoundEffect, number> = {
   win: -1,
   draw: -1,
   click: -1,
+  pop: -1,
 };
 
 // Initialize sound system

@@ -28,7 +28,7 @@ export type PlayerType = "X" | "O";
 
 // Define message types for WebRTC
 export interface GameMessage {
-  type: "move" | "reset" | "chat";
+  type: "move" | "reset" | "chat" | "disconnect";
   data: any;
 }
 
@@ -118,7 +118,21 @@ export const useGameStore = create<GameStore>()(
       return {
         // Initial state
         ...initialState,
-        quitGame: () => set(initialState),
+        quitGame: () => {
+          set(initialState);
+          if (peerConnection) {
+            closePeerConnection(peerConnection);
+            peerConnection = null;
+            set((state) => ({
+              ...state,
+              connectionStatus: "disconnected",
+              roomId: null,
+              isHost: false,
+              playerType: null,
+              chatMessages: [],
+            }));
+          }
+        },
         // Actions
         resetGame: () =>
           set((state) => {
@@ -218,7 +232,7 @@ export const useGameStore = create<GameStore>()(
             // Update state to connecting
             set((state) => ({
               ...state,
-              status: "waiting",
+              status: "connecting",
               connectionStatus: "creating peer connection",
               isHost: true,
               playerType: "X", // Host is always X
@@ -343,7 +357,7 @@ export const useGameStore = create<GameStore>()(
             // Update state to connecting
             set((state) => ({
               ...state,
-              status: "waiting",
+              status: "connecting",
               connectionStatus: "finding room",
               isHost: false,
               playerType: "O", // Joiner is always O
@@ -544,6 +558,22 @@ export const useGameStore = create<GameStore>()(
                 status: "playing",
                 winner: null,
               }));
+              break;
+
+            case "disconnect":
+              // Handle peer disconnection
+              set((state) => ({
+                ...state,
+                connectionStatus: "disconnected",
+                chatMessages: [
+                  ...state.chatMessages,
+                  { sender: "System", text: "Peer has disconnected." },
+                ],
+              }));
+              if (peerConnection) {
+                closePeerConnection(peerConnection);
+                peerConnection = null;
+              }
               break;
 
             default:

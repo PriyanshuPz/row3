@@ -24,6 +24,12 @@ export default function MultiplayerGame() {
     }
   }, [chatMessages]);
 
+  useEffect(() => {
+    if (!document.hasFocus() && chatMessages.length > 0) {
+      playSound("pop");
+    }
+  }, [chatMessages]);
+
   const handleSendMessage = () => {
     if (message.trim()) {
       sendMessage(message);
@@ -57,7 +63,7 @@ export default function MultiplayerGame() {
           <h3 className="text-lg font-bold text-text mb-2">Chat</h3>
           <div
             ref={chatRef}
-            className="flex-1 overflow-y-scroll mb-2 max-h-[300px]"
+            className="flex-1 overflow-y-auto mb-2 max-h-[300px] min-h-[300px]"
           >
             {chatMessages &&
               chatMessages.map(
@@ -68,7 +74,7 @@ export default function MultiplayerGame() {
                         "font-bold",
                         msg.sender === "You"
                           ? "text-primary"
-                          : msg.sender === "Opponent"
+                          : msg.sender === "Peer"
                           ? "text-secondary"
                           : "text-text"
                       )}

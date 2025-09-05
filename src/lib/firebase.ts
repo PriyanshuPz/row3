@@ -50,7 +50,8 @@ export async function createFirebaseRoom(
   offer: RTCSessionDescriptionInit
 ): Promise<string | null> {
   try {
-    const joinCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const joinCode =
+      "R3" + Math.random().toString(36).substring(2, 6).toUpperCase();
 
     // Calculate expiration time (1 hour from now)
     const now = new Date();
@@ -58,7 +59,7 @@ export async function createFirebaseRoom(
 
     const roomData: Room = {
       name,
-      code: "R3" + joinCode,
+      code: joinCode,
       offer: {
         type: offer.type,
         sdp: offer.sdp,

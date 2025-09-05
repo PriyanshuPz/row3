@@ -13,6 +13,9 @@ function GameContent() {
   if (status === "waiting" && mode !== "offline" && mode !== "multiplayer") {
     return <GameModeSelector />;
   }
+  if (status === "connecting" && mode !== "offline" && mode !== "multiplayer") {
+    return <GameModeSelector />;
+  }
 
   // If offline mode is selected, show the offline game
   if (mode === "offline") {
@@ -26,6 +29,10 @@ function GameContent() {
 
   // If in a multiplayer game and waiting for an opponent
   if (mode === "multiplayer" && roomId && status === "waiting") {
+    return <MultiplayerLobby />;
+  }
+
+  if (mode === "multiplayer" && roomId && status === "connecting") {
     return <MultiplayerLobby />;
   }
 
